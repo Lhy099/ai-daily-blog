@@ -37,7 +37,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
             href="/blog"
             className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" /
+            <ArrowLeft className="h-4 w-4" />
             返回文章列表
           </Link>
 
@@ -55,7 +55,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
             <div className="flex items-center gap-6 text-slate-400">
               <span>{formatDate(post.date)}</span>
               <span className="flex items-center gap-1">
-                <Clock className="h-4 w-4" /
+                <Clock className="h-4 w-4" />
                 {post.readTime}
               </span>
               <span>作者: {siteConfig.author}</span>
