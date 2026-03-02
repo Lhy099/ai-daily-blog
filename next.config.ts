@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   trailingSlash: true,
+  // 允许在静态导出时获取数据
+  experimental: {
+    dynamicIO: true,
+  },
 }
 
 export default nextConfig

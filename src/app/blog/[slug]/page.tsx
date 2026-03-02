@@ -1,6 +1,5 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { motion } from "framer-motion"
 import { getPostBySlug, getAllPosts } from "@/posts/data"
 import { siteConfig } from "@/config/site"
 import { Navbar } from "@/components/blog/navbar"
@@ -15,11 +14,20 @@ interface BlogPostPageProps {
   }
 }
 
-export default function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = getPostBySlug(params.slug)
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const post = await getPostBySlug(params.slug)
 
   if (!post) {
     notFound()
+  }
+
+  // 简单的 Markdown 渲染
+  const renderMarkdown = (content: string) => {
+    return content
+      .replace(/## (.*)/g, '<h2 class="text-2xl font-bold text-white mt-10 mb-5">$1</h2>')
+      .replace(/### (.*)/g, '<h3 class="text-xl font-bold text-white mt-8 mb-4">$1</h3>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+      .replace(/\n/g, '<br />')
   }
 
   return (
@@ -27,12 +35,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
       <Navbar />
       
       <main className="container mx-auto px-4 py-12">
-        <motion.article
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-4xl mx-auto"
-        >
+        <article className="max-w-4xl mx-auto animate-fade-in">
           <Link 
             href="/blog"
             className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors"
@@ -63,10 +66,10 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
           </header>
 
           <div 
-            className="prose prose-invert prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br />') }}
+            className="prose prose-invert prose-lg max-w-none text-slate-300"
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
           />
-        </motion.article>
+        </article>
       </main>
 
       <Footer />
@@ -74,15 +77,15 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   )
 }
 
-export function generateStaticParams() {
-  const posts = getAllPosts()
+export async function generateStaticParams() {
+  const posts = await getAllPosts()
   return posts.map((post) => ({
     slug: post.slug,
   }))
 }
 
-export function generateMetadata({ params }: BlogPostPageProps) {
-  const post = getPostBySlug(params.slug)
+export async function generateMetadata({ params }: BlogPostPageProps) {
+  const post = await getPostBySlug(params.slug)
   
   if (!post) {
     return {
