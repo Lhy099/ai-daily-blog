@@ -25,6 +25,10 @@ export interface PostFilters {
   month?: string
 }
 
+const GITHUB_REPO = "Lhy099/boba-github.io"
+const GITHUB_BRANCH = "main"
+const POSTS_PATH = "content/posts"
+
 export const posts: BlogPost[] = [
   {
     slug: "ai-china-surpass-us",
@@ -99,7 +103,7 @@ Google 最新提出的 **Infini-attention** 技术，通过将压缩记忆集成
   {
     slug: "transformer-evolution",
     title: "Transformer 架构演进：从 Attention 到 Infini-attention",
-    excerpt: "深入探讨 Transformer 架构的演变历程，从 2017 年的 Attention Is All You Need 到最新的 Infini-attention 无限上下文技术。",
+    excerpt: "深入探讨 Transformer 架构的演变历程，从 2017 年s的 Attention Is All You Need 到最新的 Infini-attention 无限上下文技术。",
     date: "2026-03-01",
     tags: ["Transformer", "深度学习", "论文解读"],
     readTime: "8 分钟",
@@ -157,18 +161,129 @@ Self-Attention 机制允许模型在处理序列时直接关注任意位置的�
   },
 ]
 
-export function getPostBySlug(slug: string) {
-  return posts.find((post) => post.slug === slug)
+// 从 GitHub 获取文章列表
+export async function getAllPosts(): Promise<BlogPost[]> {
+  try {
+    const response = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/contents/${POSTS_PATH}?ref=${GITHUB_BRANCH}`,
+      { next: { revalidate: 3600 } } // 1小时缓存
+    )
+    
+    if (!response.ok) {
+      console.error('Failed to fetch posts:', response.status)
+      return posts
+    }
+    
+    const files = await response.json()
+    
+    // 过滤出 .md 文件
+    const mdFiles = files.filter((file: any) => 
+      file.name.endsWith('.md') && file.name !== 'hello.md'
+    )
+    
+    // 获取每篇文章内容
+    const fetchedPosts = await Promise.all(
+      mdFiles.map(async (file: any) => {
+        try {
+          const contentRes = await fetch(file.download_url)
+          const content = await contentRes.text()
+          return parsePostContent(file.name, content)
+        } catch (e) {
+          console.error(`Failed to fetch ${file.name}:`, e)
+          return null
+        }
+      })
+    )
+    
+    // 过滤掉失败的，并合并本地文章（可选，这里我们优先使用远程）
+    const validPosts = fetchedPosts.filter((p): p is BlogPost => p !== null)
+    
+    // 如果远程没有文章，使用本地
+    const allPosts = validPosts.length > 0 ? validPosts : posts
+    
+    return allPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  } catch (error) {
+    console.error('Error fetching posts:', error)
+    return posts
+  }
 }
 
-export function getAllPosts() {
-  return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+// 获取单篇文章
+export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+  // 先找本地
+  const localPost = posts.find(p => p.slug === slug)
+  if (localPost) return localPost
+
+  try {
+    const response = await fetch(
+      `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${POSTS_PATH}/${slug}.md`
+    )
+    
+    if (!response.ok) return null
+    
+    const content = await response.text()
+    return parsePostContent(`${slug}.md`, content)
+  } catch (error) {
+    console.error('Error fetching post:', error)
+    return null
+  }
 }
 
-export function getTagStats(): TagStat[] {
+// 解析 Markdown 内容
+function parsePostContent(filename: string, content: string): BlogPost {
+  const slug = filename.replace('.md', '')
+  
+  // 解析 frontmatter
+  const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
+  
+  if (!frontmatterMatch) {
+    return {
+      slug,
+      title: slug,
+      excerpt: content.slice(0, 100) + '...',
+      date: new Date().toISOString(),
+      tags: [],
+      readTime: '5 分钟',
+      content
+    }
+  }
+  
+  const [, frontmatter, body] = frontmatterMatch
+  
+  // 解析各个字段
+  const titleMatch = frontmatter.match(/title:\s*"([^"]+)"/)
+  const dateMatch = frontmatter.match(/date:\s*(\S+)/)
+  const excerptMatch = frontmatter.match(/excerpt:\s*"([^"]+)"/)
+  const tagsMatch = frontmatter.match(/tags:\s*\n([\s\S]*?)(?=\ncategories:|\n---)/)
+  
+  const title = titleMatch?.[1] || slug
+  const date = dateMatch?.[1] || new Date().toISOString()
+  const excerpt = excerptMatch?.[1] || body.slice(0, 150) + '...'
+  
+  // 解析标签
+  const tags = tagsMatch 
+    ? tagsMatch[1].split('\n').map(line => line.trim().replace(/^-\s*/, '')).filter(Boolean)
+    : []
+  
+  // 计算阅读时间
+  const wordCount = body.split(/\s+/).length
+  const readTime = `${Math.ceil(wordCount / 200)} 分钟`
+  
+  return {
+    slug,
+    title,
+    excerpt,
+    date,
+    tags,
+    readTime,
+    content: body.trim()
+  }
+}
+
+export function getTagStats(allPosts: BlogPost[]): TagStat[] {
   const counter = new Map<string, number>()
 
-  for (const post of posts) {
+  for (const post of allPosts) {
     for (const tag of post.tags) {
       counter.set(tag, (counter.get(tag) ?? 0) + 1)
     }
@@ -179,10 +294,10 @@ export function getTagStats(): TagStat[] {
     .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, "zh-CN"))
 }
 
-export function getArchiveStats(): ArchiveStat[] {
+export function getArchiveStats(allPosts: BlogPost[]): ArchiveStat[] {
   const counter = new Map<string, number>()
 
-  for (const post of posts) {
+  for (const post of allPosts) {
     const key = post.date.slice(0, 7)
     counter.set(key, (counter.get(key) ?? 0) + 1)
   }
@@ -223,14 +338,14 @@ export function filterPostsBy(input: BlogPost[], filters: PostFilters): BlogPost
   })
 }
 
-export function getRelatedPosts(slug: string, limit = 3): BlogPost[] {
-  const currentPost = getPostBySlug(slug)
+export function getRelatedPosts(slug: string, allPosts: BlogPost[], limit = 3): BlogPost[] {
+  const currentPost = allPosts.find(p => p.slug === slug)
 
   if (!currentPost) {
     return []
   }
 
-  const candidates = getAllPosts().filter((post) => post.slug !== slug)
+  const candidates = allPosts.filter((post) => post.slug !== slug)
   const withSharedTag = candidates
     .map((post) => ({
       post,

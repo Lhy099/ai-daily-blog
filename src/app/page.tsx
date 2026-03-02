@@ -1,15 +1,16 @@
 import Link from "next/link"
 import { siteConfig } from "@/config/site"
-import { posts } from "@/posts/data"
+import { getAllPosts } from "@/posts/data"
 import { Navbar } from "@/components/blog/navbar"
 import { Footer } from "@/components/blog/footer"
 import { ArticleCard } from "@/components/blog/article-card"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Sparkles } from "lucide-react"
 
-export default function Home() {
+export default async function Home() {
+  const posts = await getAllPosts()
   const featuredPost = posts[0]
-  const latestPosts = posts.slice(1)
+  const latestPosts = posts.slice(1, 5) // 只在首页显示前 4 篇
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -21,7 +22,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-violet-500/10 to-transparent" />
           
           <div className="container mx-auto px-4 py-24 relative">
-            <div className="max-w-3xl">
+            <div className="max-w-3xl animate-fade-in">
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-sm text-cyan-400 mb-6">
                 <Sparkles className="h-4 w-4" />
                 每日更新 AI 前沿资讯
@@ -52,20 +53,22 @@ export default function Home() {
         </section>
 
         {/* Featured Article */}
-        <section className="container mx-auto px-4 py-16">
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-2">
-              <span className="h-8 w-1 bg-cyan-500 rounded-full" />
-              精选文章
-            </h2>
-            
-            <ArticleCard post={featuredPost} featured index={0} />
-          </div>
-        </section>
+        {featuredPost && (
+          <section className="container mx-auto px-4 py-16">
+            <div className="animate-fade-in">
+              <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-2">
+                <span className="h-8 w-1 bg-cyan-500 rounded-full" />
+                精选文章
+              </h2>
+              
+              <ArticleCard post={featuredPost} featured index={0} />
+            </div>
+          </section>
+        )}
 
         {/* Latest Articles */}
         <section className="container mx-auto px-4 py-16 border-t border-slate-800">
-          <div>
+          <div className="animate-fade-in">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                 <span className="h-8 w-1 bg-violet-500 rounded-full" />
@@ -87,7 +90,7 @@ export default function Home() {
 
         {/* Newsletter */}
         <section className="container mx-auto px-4 py-16">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 md:p-12 text-center">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 md:p-12 text-center animate-fade-in">
             <h3 className="text-2xl font-bold text-white mb-4">{siteConfig.newsletter.title}</h3>
             <p className="text-slate-400 mb-6">{siteConfig.newsletter.description}</p>
             
