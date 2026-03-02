@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { formatDate } from "@/lib/utils"
-import { Clock, ArrowRight } from "lucide-react"
+import { Clock, ArrowRight, Eye } from "lucide-react"
+import { useViewCount } from "@/lib/use-view-count"
 
 interface Post {
   slug: string
@@ -24,6 +25,8 @@ interface ArticleCardProps {
 }
 
 export function ArticleCard({ post, index = 0, featured = false }: ArticleCardProps) {
+  const views = useViewCount(post.slug)
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -60,6 +63,10 @@ export function ArticleCard({ post, index = 0, featured = false }: ArticleCardPr
                 <span className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
                   {post.readTime}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  {views > 0 ? views : "加载中"}
                 </span>
               </div>
               

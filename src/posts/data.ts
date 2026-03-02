@@ -6,6 +6,7 @@ export interface BlogPost {
   tags: string[]
   readTime: string
   content: string
+  views?: number
 }
 
 export interface TagStat {

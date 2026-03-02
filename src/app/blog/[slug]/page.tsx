@@ -7,6 +7,7 @@ import { siteConfig } from "@/config/site"
 import { Navbar } from "@/components/blog/navbar"
 import { Footer } from "@/components/blog/footer"
 import { ArticleCard } from "@/components/blog/article-card"
+import { PostViews } from "@/components/blog/post-views"
 import { Badge } from "@/components/ui/badge"
 import { formatDate } from "@/lib/utils"
 import { Clock, ArrowLeft } from "lucide-react"
@@ -59,6 +60,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <Clock className="h-4 w-4" />
                 {post.readTime}
               </span>
+              <PostViews slug={slug} />
               <span>作者: {siteConfig.author}</span>
             </div>
           </header>
