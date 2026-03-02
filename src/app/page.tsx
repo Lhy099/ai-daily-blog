@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { motion } from "framer-motion"
 import { siteConfig } from "@/config/site"
 import { posts } from "@/posts/data"
 import { Navbar } from "@/components/blog/navbar"
@@ -22,12 +21,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-violet-500/10 to-transparent" />
           
           <div className="container mx-auto px-4 py-24 relative">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="max-w-3xl"
-            >
+            <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-sm text-cyan-400 mb-6">
                 <Sparkles className="h-4 w-4" />
                 每日更新 AI 前沿资讯
@@ -53,33 +47,25 @@ export default function Home() {
                   </Button>
                 </Link>
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
         {/* Featured Article */}
         <section className="container mx-auto px-4 py-16">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-          >
+          <div>
             <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-2">
               <span className="h-8 w-1 bg-cyan-500 rounded-full" />
               精选文章
             </h2>
             
             <ArticleCard post={featuredPost} featured index={0} />
-          </motion.div>
+          </div>
         </section>
 
         {/* Latest Articles */}
         <section className="container mx-auto px-4 py-16 border-t border-slate-800">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-          >
+          <div>
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold text-white flex items-center gap-2">
                 <span className="h-8 w-1 bg-violet-500 rounded-full" />
@@ -96,17 +82,12 @@ export default function Home() {
                 <ArticleCard key={post.slug} post={post} index={index + 1} />
               ))}
             </div>
-          </motion.div>
+          </div>
         </section>
 
         {/* Newsletter */}
         <section className="container mx-auto px-4 py-16">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 md:p-12 text-center"
-          >
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 md:p-12 text-center">
             <h3 className="text-2xl font-bold text-white mb-4">{siteConfig.newsletter.title}</h3>
             <p className="text-slate-400 mb-6">{siteConfig.newsletter.description}</p>
             
@@ -118,7 +99,7 @@ export default function Home() {
               />
               <Button>订阅</Button>
             </div>
-          </motion.div>
+          </div>
         </section>
       </main>
 

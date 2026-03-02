@@ -1,38 +1,36 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { motion } from "framer-motion"
-import { getPostBySlug, getAllPosts } from "@/posts/data"
+import { getPostBySlug, getAllPosts, getRelatedPosts } from "@/posts/data"
 import { siteConfig } from "@/config/site"
 import { Navbar } from "@/components/blog/navbar"
 import { Footer } from "@/components/blog/footer"
+import { ArticleCard } from "@/components/blog/article-card"
 import { Badge } from "@/components/ui/badge"
 import { formatDate } from "@/lib/utils"
 import { Clock, ArrowLeft } from "lucide-react"
 
 interface BlogPostPageProps {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
-export default function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = getPostBySlug(params.slug)
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const { slug } = await params
+  const post = getPostBySlug(slug)
 
   if (!post) {
     notFound()
   }
+
+  const relatedPosts = getRelatedPosts(slug, 3)
 
   return (
     <div className="min-h-screen bg-slate-950">
       <Navbar />
       
       <main className="container mx-auto px-4 py-12">
-        <motion.article
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-4xl mx-auto"
-        >
+        <article className="max-w-4xl mx-auto">
           <Link 
             href="/blog"
             className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors"
@@ -66,7 +64,18 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
             className="prose prose-invert prose-lg max-w-none"
             dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '<br />') }}
           />
-        </motion.article>
+
+          {relatedPosts.length > 0 && (
+            <section className="mt-16 border-t border-slate-800 pt-12">
+              <h2 className="mb-6 text-2xl font-bold text-white">相关文章</h2>
+              <div className="grid gap-6 md:grid-cols-2">
+                {relatedPosts.map((relatedPost, index) => (
+                  <ArticleCard key={relatedPost.slug} post={relatedPost} index={index} />
+                ))}
+              </div>
+            </section>
+          )}
+        </article>
       </main>
 
       <Footer />
@@ -81,8 +90,9 @@ export function generateStaticParams() {
   }))
 }
 
-export function generateMetadata({ params }: BlogPostPageProps) {
-  const post = getPostBySlug(params.slug)
+export async function generateMetadata({ params }: BlogPostPageProps) {
+  const { slug } = await params
+  const post = getPostBySlug(slug)
   
   if (!post) {
     return {

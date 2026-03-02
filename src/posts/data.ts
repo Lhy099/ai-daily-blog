@@ -1,4 +1,31 @@
-export const posts = [
+export interface BlogPost {
+  slug: string
+  title: string
+  excerpt: string
+  date: string
+  tags: string[]
+  readTime: string
+  content: string
+}
+
+export interface TagStat {
+  tag: string
+  count: number
+}
+
+export interface ArchiveStat {
+  key: string
+  label: string
+  count: number
+}
+
+export interface PostFilters {
+  query?: string
+  tag?: string
+  month?: string
+}
+
+export const posts: BlogPost[] = [
   {
     slug: "ai-china-surpass-us",
     title: "AI日报：中国大模型调用量首超美国，四款模型霸榜全球前五",
@@ -135,5 +162,95 @@ export function getPostBySlug(slug: string) {
 }
 
 export function getAllPosts() {
-  return posts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  return [...posts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+}
+
+export function getTagStats(): TagStat[] {
+  const counter = new Map<string, number>()
+
+  for (const post of posts) {
+    for (const tag of post.tags) {
+      counter.set(tag, (counter.get(tag) ?? 0) + 1)
+    }
+  }
+
+  return [...counter.entries()]
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, "zh-CN"))
+}
+
+export function getArchiveStats(): ArchiveStat[] {
+  const counter = new Map<string, number>()
+
+  for (const post of posts) {
+    const key = post.date.slice(0, 7)
+    counter.set(key, (counter.get(key) ?? 0) + 1)
+  }
+
+  return [...counter.entries()]
+    .map(([key, count]) => {
+      const [year, month] = key.split("-")
+      const date = new Date(Number(year), Number(month) - 1, 1)
+      return {
+        key,
+        count,
+        label: date.toLocaleDateString("zh-CN", {
+          year: "numeric",
+          month: "long",
+        }),
+      }
+    })
+    .sort((a, b) => b.key.localeCompare(a.key))
+}
+
+export function filterPostsBy(input: BlogPost[], filters: PostFilters): BlogPost[] {
+  const query = filters.query?.trim().toLowerCase()
+  const tag = filters.tag?.trim()
+  const month = filters.month?.trim()
+
+  return input.filter((post) => {
+    const matchesQuery = !query
+      ? true
+      : [post.title, post.excerpt, post.content, post.tags.join(" ")]
+          .join(" ")
+          .toLowerCase()
+          .includes(query)
+
+    const matchesTag = !tag ? true : post.tags.includes(tag)
+    const matchesMonth = !month ? true : post.date.startsWith(month)
+
+    return matchesQuery && matchesTag && matchesMonth
+  })
+}
+
+export function getRelatedPosts(slug: string, limit = 3): BlogPost[] {
+  const currentPost = getPostBySlug(slug)
+
+  if (!currentPost) {
+    return []
+  }
+
+  const candidates = getAllPosts().filter((post) => post.slug !== slug)
+  const withSharedTag = candidates
+    .map((post) => ({
+      post,
+      sharedTagCount: post.tags.filter((tag) => currentPost.tags.includes(tag)).length,
+    }))
+    .filter((item) => item.sharedTagCount > 0)
+    .sort(
+      (a, b) =>
+        b.sharedTagCount - a.sharedTagCount ||
+        new Date(b.post.date).getTime() - new Date(a.post.date).getTime()
+    )
+    .map((item) => item.post)
+
+  if (withSharedTag.length >= limit) {
+    return withSharedTag.slice(0, limit)
+  }
+
+  const fallback = candidates
+    .filter((post) => !withSharedTag.some((item) => item.slug === post.slug))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+  return [...withSharedTag, ...fallback].slice(0, limit)
 }

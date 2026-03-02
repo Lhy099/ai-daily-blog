@@ -31,6 +31,8 @@
   }
   body {
     @apply bg-slate-950 text-slate-50;
+    font-family: "Avenir Next", "SF Pro Text", "PingFang SC", "Noto Sans SC",
+      "Microsoft YaHei", "Helvetica Neue", sans-serif;
   }
 }
 

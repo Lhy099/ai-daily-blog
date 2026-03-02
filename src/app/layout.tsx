@@ -1,12 +1,6 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
 import { siteConfig } from "@/config/site"
-
-const inter = Inter({ 
-  subsets: ["latin"],
-  display: "swap",
-})
 
 export const metadata: Metadata = {
   title: {
@@ -38,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN" className="dark">
-      <body className={`${inter.className} antialiased bg-slate-950`}>
+      <body className="antialiased bg-slate-950">
         {children}
       </body>
     </html>
