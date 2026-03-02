@@ -252,20 +252,26 @@ function parsePostContent(filename: string, content: string): BlogPost {
   
   const [, frontmatter, body] = frontmatterMatch
   
-  // 解析各个字段
-  const titleMatch = frontmatter.match(/title:\s*"([^"]+)"/)
-  const dateMatch = frontmatter.match(/date:\s*(\S+)/)
-  const excerptMatch = frontmatter.match(/excerpt:\s*"([^"]+)"/)
-  const tagsMatch = frontmatter.match(/tags:\s*\n([\s\S]*?)(?=\ncategories:|\n---)/)
+  // 解析各个字段 - 增强兼容性
+  const titleMatch = frontmatter.match(/title:\s*["']?([^"'\n]+)["']?/)
+  const dateMatch = frontmatter.match(/date:\s*["']?(\d{4}-\d{2}-\d{2})/)
+  const excerptMatch = frontmatter.match(/excerpt:\s*["']?([^"'\n]+)["']?/)
+  const tagsMatch = frontmatter.match(/tags:\s*\[?([^\]\n]*)\]?/)
   
-  const title = titleMatch?.[1] || slug
-  const date = dateMatch?.[1] || new Date().toISOString()
-  const excerpt = excerptMatch?.[1] || body.slice(0, 150) + '...'
+  const title = titleMatch?.[1]?.trim() || slug
+  const date = dateMatch?.[1] || new Date().toISOString().split('T')[0]
+  const excerpt = excerptMatch?.[1]?.trim() || body.slice(0, 150).trim() + '...'
   
-  // 解析标签
-  const tags = tagsMatch 
-    ? tagsMatch[1].split('\n').map(line => line.trim().replace(/^-\s*/, '')).filter(Boolean)
-    : []
+  // 解析标签 (支持 [tag1, tag2] 或 列表格式)
+  let tags: string[] = []
+  if (tagsMatch && tagsMatch[1]) {
+    tags = tagsMatch[1].split(/,/).map(t => t.trim().replace(/["']/g, '')).filter(Boolean)
+  } else {
+    const tagsListMatch = frontmatter.match(/tags:\s*\n([\s\S]*?)(?=\n\w+:|---)/)
+    if (tagsListMatch) {
+      tags = tagsListMatch[1].split('\n').map(line => line.trim().replace(/^-\s*/, '')).filter(Boolean)
+    }
+  }
   
   // 计算阅读时间
   const wordCount = body.split(/\s+/).length
