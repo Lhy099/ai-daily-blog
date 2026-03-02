@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { CalendarDays, FolderOpen, SearchX } from "lucide-react"
@@ -18,7 +19,7 @@ function readSearchParam(value: string | null): string {
   return value ?? ""
 }
 
-export default function BlogPage() {
+function BlogPageContent() {
   const searchParams = useSearchParams()
   const allPosts = getAllPosts()
   const tagStats = getTagStats()
@@ -185,5 +186,13 @@ export default function BlogPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function BlogPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-950" />}>
+      <BlogPageContent />
+    </Suspense>
   )
 }
