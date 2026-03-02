@@ -1,5 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { getPostBySlug, getAllPosts, getRelatedPosts } from "@/posts/data"
 import { siteConfig } from "@/config/site"
 import { Navbar } from "@/components/blog/navbar"
@@ -25,15 +27,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   const allPosts = await getAllPosts()
   const relatedPosts = getRelatedPosts(slug, allPosts, 3)
-
-  // 简单的 Markdown 渲染
-  const renderMarkdown = (content: string) => {
-    return content
-      .replace(/## (.*)/g, '<h2 class="text-2xl font-bold text-white mt-10 mb-5">$1</h2>')
-      .replace(/### (.*)/g, '<h3 class="text-xl font-bold text-white mt-8 mb-4">$1</h3>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
-      .replace(/\n/g, '<br />')
-  }
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -70,10 +63,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             </div>
           </header>
 
-          <div 
-            className="prose prose-invert prose-lg max-w-none text-slate-300"
-            dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
-          />
+          <div className="prose prose-invert prose-lg max-w-none text-slate-300">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {post.content}
+            </ReactMarkdown>
+          </div>
 
           {relatedPosts.length > 0 && (
             <section className="mt-16 border-t border-slate-800 pt-12">
