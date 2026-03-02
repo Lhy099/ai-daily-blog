@@ -166,7 +166,7 @@ export async function getAllPosts(): Promise<BlogPost[]> {
   try {
     const response = await fetch(
       `https://api.github.com/repos/${GITHUB_REPO}/contents/${POSTS_PATH}?ref=${GITHUB_BRANCH}`,
-      { next: { revalidate: 3600 } } // 1小时缓存
+      { next: { revalidate: 60 } } // 60秒缓存，确保更新更及时
     )
     
     if (!response.ok) {
@@ -216,7 +216,8 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
 
   try {
     const response = await fetch(
-      `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${POSTS_PATH}/${slug}.md`
+      `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${POSTS_PATH}/${slug}.md`,
+      { next: { revalidate: 60 } }
     )
     
     if (!response.ok) return null
