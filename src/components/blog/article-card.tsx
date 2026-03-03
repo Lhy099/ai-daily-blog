@@ -2,11 +2,10 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { cn } from "@/lib/utils"
+import { cn, formatOnlyDate, formatOnlyTime } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { formatDate } from "@/lib/utils"
-import { Clock, ArrowRight, Eye } from "lucide-react"
+import { Clock, ArrowRight, Eye, Timer, Calendar } from "lucide-react"
 import { useViewCount } from "@/lib/use-view-count"
 
 interface Post {
@@ -53,35 +52,35 @@ export function ArticleCard({ post, index = 0, featured = false }: ArticleCardPr
             </CardTitle>
             <CardDescription className="text-slate-400 line-clamp-2">
               {post.excerpt}
-            import { formatOnlyDate, formatOnlyTime } from "@/lib/utils"
-            import { Clock, ArrowRight, Eye, Timer, Calendar } from "lucide-react"
-            // ...
-                      <CardContent>
-                        <div className="flex items-center justify-between text-sm text-slate-500">
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3.5 w-3.5" />
-                              {formatOnlyDate(post.date)}
-                            </span>
-                            <span className="flex items-center gap-1 text-cyan-400 font-medium">
-                              <Clock className="h-3.5 w-3.5" />
-                              {formatOnlyTime(post.date)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Timer className="h-3.5 w-3.5" />
-                              {post.readTime}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Eye className="h-3.5 w-3.5" />
-                              {views > 0 ? views : "加载中"}
-                            </span>
-                          </div>
-
-                          <span className="hidden sm:flex items-center gap-1 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            阅读全文 <ArrowRight className="h-4 w-4" />
-                          </span>
-                        </div>
-                      </CardContent>
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <div className="flex items-center justify-between text-sm text-slate-500">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5" />
+                  {formatOnlyDate(post.date)}
+                </span>
+                <span className="flex items-center gap-1 text-cyan-400 font-medium">
+                  <Clock className="h-3.5 w-3.5" />
+                  {formatOnlyTime(post.date)}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Timer className="h-3.5 w-3.5" />
+                  {post.readTime}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Eye className="h-3.5 w-3.5" />
+                  {views > 0 ? views : "加载中"}
+                </span>
+              </div>
+              
+              <span className="hidden sm:flex items-center gap-1 text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                阅读全文 <ArrowRight className="h-4 w-4" />
+              </span>
+            </div>
+          </CardContent>
         </Card>
       </Link>
     </motion.div>
