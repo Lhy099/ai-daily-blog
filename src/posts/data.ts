@@ -78,8 +78,18 @@ export async function getAllPosts(): Promise<BlogPost[]> {
     
     const validPosts = fetchedPosts.filter((p): p is BlogPost => p !== null)
     
-    // 按日期倒序排列
-    return validPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    // 按日期/时间倒序排列 (最新时间在前)
+    // 如果日期相同，按 slug 倒序排列作为兜底 (文件名通常能反映顺序)
+    return validPosts.sort((a, b) => {
+      const timeA = new Date(a.date).getTime()
+      const timeB = new Date(b.date).getTime()
+      
+      if (timeB !== timeA) {
+        return timeB - timeA
+      }
+      
+      return b.slug.localeCompare(a.slug)
+    })
   } catch (error) {
     console.error('Critical error in getAllPosts:', error)
     return posts
@@ -134,8 +144,8 @@ function parsePostContent(filename: string, content: string): BlogPost {
   const titleMatch = frontmatter.match(/title:\s*["']?([^"'\n\r]+)["']?/)
   const title = titleMatch?.[1]?.trim() || slug
   
-  // 提取日期：支持 date: 2026-03-02 或 date: "2026-03-02"
-  const dateMatch = frontmatter.match(/date:\s*["']?(\d{4}-\d{2}-\d{2})/)
+  // 提取日期：支持精确到秒的时间戳，如 date: 2026-03-03 14:30:00
+  const dateMatch = frontmatter.match(/date:\s*["']?(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}:\d{2})?)["']?/)
   const date = dateMatch?.[1] || extractDateFromContent(content, slug)
   
   // 提取摘要
@@ -171,11 +181,11 @@ function extractDateFromContent(content: string, slug: string): string {
   const slugDateMatch = slug.match(/^(\d{4}-\d{2}-\d{2})/)
   if (slugDateMatch) return slugDateMatch[1]
   
-  // 2. 尝试从正文内容匹配日期
-  const bodyDateMatch = content.match(/(\d{4}-\d{2}-\d{2})/)
+  // 2. 尝试从正文内容匹配日期时间
+  const bodyDateMatch = content.match(/(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}:\d{2})?)/)
   if (bodyDateMatch) return bodyDateMatch[1]
   
-  return new Date().toISOString().split('T')[0]
+  return new Date().toISOString()
 }
 
 // 辅助函数：计算阅读时间
