@@ -5,12 +5,20 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString("zh-CN", {
+export function formatDate(dateStr: string): string {
+  const date = new Date(dateStr)
+  
+  // 检查是否有具体时间 (如果是 00:00:00 则可能是默认日期)
+  const hasTime = dateStr.includes('T') || dateStr.includes(':')
+  
+  const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "long",
     day: "numeric",
-  })
+    ...(hasTime ? { hour: "2-digit", minute: "2-digit" } : {})
+  }
+  
+  return date.toLocaleDateString("zh-CN", options)
 }
 
 export function calculateReadTime(content: string): string {
