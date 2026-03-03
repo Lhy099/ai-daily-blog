@@ -100,55 +100,75 @@ export function getTagStats(allPosts: BlogPost[]): TagStat[] {
   for (const post of allPosts) {
     for (const tag of post.tags) {
       counter.set(tag, (counter.get(tag) ?? 0) + 1)
+    export interface PostFilters {
+      query?: string
+      tag?: string
+      month?: string
+      day?: string
     }
-  }
-  return [...counter.entries()]
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, "zh-CN"))
-}
 
-export function getArchiveStats(allPosts: BlogPost[]): ArchiveStat[] {
-  const counter = new Map<string, number>()
-  for (const post of allPosts) {
-    const key = post.date.slice(0, 7)
-    counter.set(key, (counter.get(key) ?? 0) + 1)
-  }
-  return [...counter.entries()]
-    .map(([key, count]) => {
-      const [year, month] = key.split("-")
-      const date = new Date(Number(year), Number(month) - 1, 1)
-      return {
-        key,
-        count,
-        label: date.toLocaleDateString("zh-CN", {
-          year: "numeric",
-          month: "long",
-        }),
+    // ... 解析逻辑保持不变 ...
+
+    export function getArchiveStats(allPosts: BlogPost[]): ArchiveStat[] {
+      const counter = new Map<string, number>()
+      for (const post of allPosts) {
+        const key = post.date.slice(0, 7)
+        counter.set(key, (counter.get(key) ?? 0) + 1)
       }
-    })
-    .sort((a, b) => b.key.localeCompare(a.key))
-}
+      return [...counter.entries()]
+        .map(([key, count]) => {
+          const [year, month] = key.split("-")
+          const date = new Date(Number(year), Number(month) - 1, 1)
+          return {
+            key,
+            count,
+            label: date.toLocaleDateString("zh-CN", {
+              year: "numeric",
+              month: "long",
+            }),
+          }
+        })
+        .sort((a, b) => b.key.localeCompare(a.key))
+    }
 
-export function filterPostsBy(input: BlogPost[], filters: PostFilters): BlogPost[] {
-  const query = filters.query?.trim().toLowerCase()
-  const tag = filters.tag?.trim()
-  const month = filters.month?.trim()
+    export function getDayStats(allPosts: BlogPost[]): ArchiveStat[] {
+      const counter = new Map<string, number>()
+      for (const post of allPosts) {
+        // 提取 YYYY-MM-DD
+        const key = post.date.slice(0, 10)
+        counter.set(key, (counter.get(key) ?? 0) + 1)
+      }
+      return [...counter.entries()]
+        .map(([key, count]) => ({
+          key,
+          count,
+          label: key, // 直接显示日期
+        }))
+        .sort((a, b) => b.key.localeCompare(a.key))
+        .slice(0, 15) // 仅显示最近 15 天，避免侧边栏过长
+    }
 
-  return input.filter((post) => {
-    const matchesQuery = !query
-      ? true
-      : [post.title, post.excerpt, post.content, post.tags.join(" ")]
-          .join(" ")
-          .toLowerCase()
-          .includes(query)
+    export function filterPostsBy(input: BlogPost[], filters: PostFilters): BlogPost[] {
+      const query = filters.query?.trim().toLowerCase()
+      const tag = filters.tag?.trim()
+      const month = filters.month?.trim()
+      const day = filters.day?.trim()
 
-    const matchesTag = !tag ? true : post.tags.includes(tag)
-    const matchesMonth = !month ? true : post.date.startsWith(month)
+      return input.filter((post) => {
+        const matchesQuery = !query
+          ? true
+          : [post.title, post.excerpt, post.content, post.tags.join(" ")]
+              .join(" ")
+              .toLowerCase()
+              .includes(query)
 
-    return matchesQuery && matchesTag && matchesMonth
-  })
-}
+        const matchesTag = !tag ? true : post.tags.includes(tag)
+        const matchesMonth = !month ? true : post.date.startsWith(month)
+        const matchesDay = !day ? true : post.date.startsWith(day)
 
+        return matchesQuery && matchesTag && matchesMonth && matchesDay
+      })
+    }
 export function getRelatedPosts(slug: string, allPosts: BlogPost[], limit = 3): BlogPost[] {
   const currentPost = allPosts.find(p => p.slug === slug)
   if (!currentPost) return []

@@ -10,7 +10,7 @@ import { ArrowRight, Sparkles } from "lucide-react"
 export default async function Home() {
   const posts = await getAllPosts()
   const featuredPost = posts[0]
-  const latestPosts = posts.slice(1, 5) // 只在首页显示前 4 篇
+  const latestPosts = posts.slice(1, 9) // 首页显示精选后的前 8 篇
 
   return (
     <div className="min-h-screen bg-slate-950">

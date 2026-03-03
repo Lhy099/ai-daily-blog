@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { CalendarDays, FolderOpen, SearchX } from "lucide-react"
 import { siteConfig } from "@/config/site"
-import { BlogPost, getArchiveStats, getTagStats, filterPostsBy } from "@/posts/data"
+import { BlogPost, getArchiveStats, getTagStats, filterPostsBy, getDayStats } from "@/posts/data"
 import { ArticleCard } from "@/components/blog/article-card"
 import { BlogFilters } from "@/components/blog/blog-filters"
 import { BlogPagination } from "@/components/blog/blog-pagination"
@@ -20,32 +20,36 @@ export function BlogPageContent({ allPosts }: { allPosts: BlogPost[] }) {
   const searchParams = useSearchParams()
   const tagStats = getTagStats(allPosts)
   const archiveStats = getArchiveStats(allPosts)
+  const dayStats = getDayStats(allPosts)
 
   const query = readSearchParam(searchParams.get("q")).trim()
   const tag = readSearchParam(searchParams.get("tag")).trim()
   const month = readSearchParam(searchParams.get("month")).trim()
+  const day = readSearchParam(searchParams.get("day")).trim()
   const pageParam = readSearchParam(searchParams.get("page")).trim()
 
-  const filteredPosts = filterPostsBy(allPosts, { query, tag, month })
+  const filteredPosts = filterPostsBy(allPosts, { query, tag, month, day })
   const totalPages = Math.max(1, Math.ceil(filteredPosts.length / POSTS_PER_PAGE))
   const parsedPage = Number.parseInt(pageParam || "1", 10)
   const currentPage =
     Number.isNaN(parsedPage) || parsedPage < 1 ? 1 : Math.min(parsedPage, totalPages)
   const startIndex = (currentPage - 1) * POSTS_PER_PAGE
   const pagePosts = filteredPosts.slice(startIndex, startIndex + POSTS_PER_PAGE)
-  const hasFilters = Boolean(query || tag || month)
+  const hasFilters = Boolean(query || tag || month || day)
 
-  const createFilterHref = (updates: { q?: string; tag?: string; month?: string }) => {
+  const createFilterHref = (updates: { q?: string; tag?: string; month?: string; day?: string }) => {
     const params = new URLSearchParams()
     const next = {
       q: updates.q !== undefined ? updates.q : query,
       tag: updates.tag !== undefined ? updates.tag : tag,
       month: updates.month !== undefined ? updates.month : month,
+      day: updates.day !== undefined ? updates.day : day,
     }
 
     if (next.q) params.set("q", next.q)
     if (next.tag) params.set("tag", next.tag)
     if (next.month) params.set("month", next.month)
+    if (next.day) params.set("day", next.day)
 
     const queryString = params.toString()
     return queryString ? `/blog?${queryString}` : "/blog"
@@ -65,7 +69,8 @@ export function BlogPageContent({ allPosts }: { allPosts: BlogPost[] }) {
           <Badge variant="outline">总计 {allPosts.length} 篇</Badge>
           {query && <Badge variant="secondary">关键词: {query}</Badge>}
           {tag && <Badge variant="secondary">标签: {tag}</Badge>}
-          {month && <Badge variant="secondary">归档: {month}</Badge>}
+          {month && <Badge variant="secondary">月份: {month}</Badge>}
+          {day && <Badge variant="secondary">日期: {day}</Badge>}
           {hasFilters && (
             <Link
               href="/blog"
@@ -149,7 +154,7 @@ export function BlogPageContent({ allPosts }: { allPosts: BlogPost[] }) {
           <section className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
               <CalendarDays className="h-4 w-4 text-violet-400" />
-              时间归档
+              月份归档
             </h2>
             <div className="mt-3 space-y-2">
               {archiveStats.map((item) => {
@@ -166,6 +171,32 @@ export function BlogPageContent({ allPosts }: { allPosts: BlogPost[] }) {
                   >
                     <span>{item.label}</span>
                     <span className="text-slate-500">{item.count}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
+              <CalendarDays className="h-4 w-4 text-emerald-400" />
+              日期归档
+            </h2>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {dayStats.map((item) => {
+                const active = item.key === day
+                return (
+                  <Link
+                    key={item.key}
+                    href={createFilterHref({ day: active ? "" : item.key })}
+                    className={`flex items-center justify-between rounded-lg border px-2 py-1.5 text-[10px] transition-colors ${
+                      active
+                        ? "border-emerald-500/60 bg-emerald-500/20 text-emerald-200"
+                        : "border-slate-800 text-slate-400 hover:border-slate-600"
+                    }`}
+                  >
+                    <span>{item.key.slice(5)}</span>
+                    <span className="opacity-50">{item.count}</span>
                   </Link>
                 )
               })}
