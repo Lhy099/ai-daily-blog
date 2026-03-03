@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { getAllPosts } from "@/posts/data"
+import { getAllPosts } from "@/lib/posts-server"
 import { Navbar } from "@/components/blog/navbar"
 import { Footer } from "@/components/blog/footer"
 import { BlogPageContent } from "@/components/blog/blog-page-content"

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { siteConfig } from "@/config/site"
-import { getAllPosts } from "@/posts/data"
+import { getAllPosts } from "@/lib/posts-server"
 import { Navbar } from "@/components/blog/navbar"
 import { Footer } from "@/components/blog/footer"
 import { ArticleCard } from "@/components/blog/article-card"
