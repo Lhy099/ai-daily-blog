@@ -7,18 +7,35 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
-  
-  // 检查是否有具体时间 (如果是 00:00:00 则可能是默认日期)
   const hasTime = dateStr.includes('T') || dateStr.includes(':')
-  
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "long",
     day: "numeric",
     ...(hasTime ? { hour: "2-digit", minute: "2-digit" } : {})
   }
-  
   return date.toLocaleDateString("zh-CN", options)
+}
+
+export function formatOnlyDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
+}
+
+export function formatOnlyTime(dateStr: string): string {
+  const date = new Date(dateStr)
+  // 如果没有具体时间且是午夜，可能只是日期
+  if (date.getHours() === 0 && date.getMinutes() === 0 && !dateStr.includes('T') && !dateStr.includes(':')) {
+    return "--:--"
+  }
+  return date.toLocaleTimeString("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  })
 }
 
 export function calculateReadTime(content: string): string {

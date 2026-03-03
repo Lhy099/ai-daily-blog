@@ -40,8 +40,18 @@ export async function getAllPosts(): Promise<BlogPost[]> {
       .map(fileName => {
         const fullPath = path.join(POSTS_DIRECTORY, fileName)
         const fileContents = fs.readFileSync(fullPath, 'utf8')
-        // 只进行内容解析，不依赖不可靠的本地文件系统 birthtime
-        return parsePostContent(fileName, fileContents)
+        const stats = fs.statSync(fullPath)
+        const post = parsePostContent(fileName, fileContents)
+        
+        // 动态时间逻辑：如果日期字符串只有 10 位 (YYYY-MM-DD)，补全文件时间
+        if (post.date && post.date.length === 10) {
+          const fileTime = stats.birthtimeMs > 0 ? stats.birthtime : stats.mtime
+          // 转换为 ISO 字符串并截取时间部分，或者直接合并
+          const isoStr = fileTime.toISOString() // 2026-03-03T10:00:00.000Z
+          post.date = `${post.date}T${isoStr.split('T')[1]}`
+        }
+        
+        return post
       })
     
     console.log('[posts-server] Parsed posts:', fetchedPosts.length)
