@@ -40,7 +40,18 @@ export async function getAllPosts(): Promise<BlogPost[]> {
       .map(fileName => {
         const fullPath = path.join(POSTS_DIRECTORY, fileName)
         const fileContents = fs.readFileSync(fullPath, 'utf8')
-        return parsePostContent(fileName, fileContents)
+        const stats = fs.statSync(fullPath)
+        const post = parsePostContent(fileName, fileContents)
+        
+        // 如果 Frontmatter 里的日期只有年月日 (长度为10)，则补全具体的文件创建/修改时间
+        // 这样可以确保同一天推送的文章能按实际推送时间排序
+        if (post.date.length === 10) {
+          const fileTime = stats.birthtimeMs > 0 ? stats.birthtime : stats.mtime
+          const timeStr = fileTime.toTimeString().split(' ')[0] // HH:MM:SS
+          post.date = `${post.date} ${timeStr}`
+        }
+        
+        return post
       })
     
     console.log('[posts-server] Parsed posts:', fetchedPosts.length)
