@@ -104,7 +104,7 @@ export function getTagStats(allPosts: BlogPost[]): TagStat[] {
   }
   return [...counter.entries()]
     .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count || a.tag.localeCompare(tag, "zh-CN"))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, "zh-CN"))
 }
 
 export function getArchiveStats(allPosts: BlogPost[]): ArchiveStat[] {
