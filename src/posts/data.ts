@@ -51,10 +51,11 @@ export function parsePostContent(filename: string, content: string): BlogPost {
   
   const titleMatch = frontmatter.match(/title:\s*["']?([^"'\n\r]+)["']?/)
   const title = titleMatch?.[1]?.trim() || slug
-  
-  const dateMatch = frontmatter.match(/date:\s*["']?(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}:\d{2})?)["']?/)
-  const date = dateMatch?.[1] || extractDateFromContent(content, slug)
-  
+  // 提取日期：支持 ISO 格式 (T) 和 空格格式，如 2026-03-03T12:00:00 或 2026-03-03 12:00:00
+  const dateMatch = frontmatter.match(/date:\s*["']?(\d{4}-\d{2}-\d{2}(?:[T\s]\d{2}:\d{2}:\d{2})?[^"'\n\r]*)["']?/)
+  const date = dateMatch?.[1]?.trim() || extractDateFromContent(content, slug)
+
+  // 提取摘要
   const excerptMatch = frontmatter.match(/excerpt:\s*["']?([^"'\n\r]+)["']?/)
   const excerpt = excerptMatch?.[1]?.trim() || body.trim().slice(0, 150).replace(/\n/g, ' ') + '...'
   

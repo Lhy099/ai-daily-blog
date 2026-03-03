@@ -40,31 +40,25 @@ export async function getAllPosts(): Promise<BlogPost[]> {
       .map(fileName => {
         const fullPath = path.join(POSTS_DIRECTORY, fileName)
         const fileContents = fs.readFileSync(fullPath, 'utf8')
-        const stats = fs.statSync(fullPath)
-        const post = parsePostContent(fileName, fileContents)
-        
-        // 如果 Frontmatter 里的日期只有年月日 (长度为10)，则补全具体的文件创建/修改时间
-        // 这样可以确保同一天推送的文章能按实际推送时间排序
-        if (post.date.length === 10) {
-          const fileTime = stats.birthtimeMs > 0 ? stats.birthtime : stats.mtime
-          const timeStr = fileTime.toTimeString().split(' ')[0] // HH:MM:SS
-          post.date = `${post.date} ${timeStr}`
-        }
-        
-        return post
+        // 只进行内容解析，不依赖不可靠的本地文件系统 birthtime
+        return parsePostContent(fileName, fileContents)
       })
     
     console.log('[posts-server] Parsed posts:', fetchedPosts.length)
     
-    // 按日期/时间倒序排列 (最新时间在前)
+    // 终极排序逻辑：
+    // 1. 优先比较日期/时间戳
+    // 2. 如果日期相同，比较文件名 (slug) 倒序排列。
+    // 由于文件名通常包含 2026-03-03-ai-innovation 等关键词，同日的不同类别日报能有稳定的显示顺序。
     return fetchedPosts.sort((a, b) => {
       const timeA = new Date(a.date).getTime()
       const timeB = new Date(b.date).getTime()
       
-      if (timeB !== timeA) {
+      if (!isNaN(timeA) && !isNaN(timeB) && timeB !== timeA) {
         return timeB - timeA
       }
       
+      // 日期完全相同或解析失败，按 slug 字母表倒序排列 (确保最新文件排在上面)
       return b.slug.localeCompare(a.slug)
     })
   } catch (error) {
