@@ -2,8 +2,7 @@
   "version": 2,
   "name": "ai-daily-blog",
   "framework": "nextjs",
-  "buildCommand": "next build",
-  "outputDirectory": "dist",
+  "buildCommand": "npm run build",
   "installCommand": "npm install",
   "regions": ["hkg1"]
 }
